@@ -21,7 +21,7 @@ use Google\AdsApi\AdWords\v201809\o\SeedAdGroupIdSearchParameter;
 use Google\AdsApi\AdWords\v201809\o\TargetingIdeaSelector;
 use Google\AdsApi\AdWords\v201809\o\TargetingIdeaService;
 use Google\AdsApi\Common\OAuth2TokenBuilder;
-
+use Google\AdsApi\Common\Util\MapEntries;
 
 /**
  * This example gets keyword ideas related to a seed keyword.
@@ -116,11 +116,54 @@ class Api
 
         // Print out some information for each targeting idea.
         $entries = $page->getEntries();
+        if ($entries !== null) {
         	
-      
-        return $entries;	
+        	$sql= 'UPDATE search_terms set search_volume = (case ';
+            
 
-        
+
+            foreach ($entries as $targetingIdea) {
+                $data = MapEntries::toAssociativeArray($targetingIdea->getData());
+                $keyword = $data[AttributeType::KEYWORD_TEXT]->getValue();
+                $searchVolume = ($data[AttributeType::SEARCH_VOLUME]->getValue() !== null)
+                    ? $data[AttributeType::SEARCH_VOLUME]->getValue() : 0;
+                //$averageCpc = $data[AttributeType::AVERAGE_CPC]->getValue();
+                //$competition = $data[AttributeType::COMPETITION]->getValue();
+                /*$categoryIds = ($data[AttributeType::CATEGORY_PRODUCTS_AND_SERVICES]->getValue() === null)
+                    ? $categoryIds = ''
+                    : implode(
+                        ', ',
+                        $data[AttributeType::CATEGORY_PRODUCTS_AND_SERVICES]->getValue()
+                    );*/
+                
+                 
+                    
+                
+                
+                /*printf(
+                    "Keyword with text '%s', average monthly search volume %d, ",
+                    //. "average CPC %d, and competition %.2f was found with categories: %s\n",
+                    $keyword,
+                    $searchVolume
+                    //($averageCpc === null) ? 0 : $averageCpc->getMicroAmount(),
+                    //$competition,
+                    //$categoryIds
+
+                );*/
+
+              $sql .= "when name='".$keyword."' then $searchVolume ";   
+            }
+
+            $sql .= ' end) where name in("'.implode("\",\"",$search_term_array).'") ';	
+            
+            $affectedRows = DB::update($sql);
+            echo "----------------affected Rows -$affectedRows----------------------\n\n";
+
+        }
+
+        if (empty($entries)) {
+            print "No related keywords were found.\n";
+        }
     }
 
     public  function index()
@@ -131,7 +174,7 @@ class Api
         // Construct an API session configured from a properties file and the
         // OAuth2 credentials above.
         $session = (new AdWordsSessionBuilder())->fromFile(config('app.adsapi_php_path'))->withOAuth2Credential($oAuth2Credential)->build();
-        return self::runExample(new AdWordsServices(), $session, self::AD_GROUP_ID);
+        self::runExample(new AdWordsServices(), $session, self::AD_GROUP_ID);
     }
 }
 

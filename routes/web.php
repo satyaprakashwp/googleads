@@ -14,3 +14,12 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+Route::get('/googleads','Api@index');
+
+
+Route::get('/test', function () {
+    
+    print_r(file_get_contents(config('app.adsapi_php_path')));
+});
