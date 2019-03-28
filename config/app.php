@@ -226,4 +226,7 @@ return [
 
     ],
 
+    'adsapi_php_path' => realpath(base_path('adsapi_php.ini'))
 ];
+
+
